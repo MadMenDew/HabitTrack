@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+<head>
+  <title>Habit Tracker</title>
+</head>
+<body>
+  <h1>Habit Tracker</h1>
+  <ul>
+    {% for habit in habits %}
+      <li>{{ habit.name }} ({{ habit.habit_type }} / {{ habit.strategy }})</li>
+    {% empty %}
+      <li>No habits yet!</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

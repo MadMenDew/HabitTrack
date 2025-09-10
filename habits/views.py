@@ -1,4 +1,6 @@
-from django.http import HttpResponse
+from django.shortcuts import render
+from .models import Habit
 
 def home(request):
-    return HttpResponse("Hello from Habit Tracker")
+    habits = Habit.objects.all()
+    return render(request, "habits/home.html", {"habits": habits})
