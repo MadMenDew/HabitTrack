@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="{% url 'habits:home' %}">Back</a>
+<h1>{{ habit.name }}</h1>
+
+<p>
+  Current period: {{ anchor }}
+  {% if completion and completion.done %}
+    <span class="pill">Done</span>
+  {% else %}
+    <span class="pill">Not done</span>
+  {% endif %}
+</p>
+
+<p><a href="{% url 'habits:toggle_completion' habit.pk %}">Toggle completion</a></p>
+
+<p>Streak: {{ streak }}</p>
+
+<h3>Mini History</h3>
+<p>
+  {% for c in history %}
+    <span class="square {% if c.done %}on{% else %}off{% endif %}"></span>
+  {% empty %}
+    No history yet.
+  {% endfor %}
+</p>
+
+<h3>Recent entries</h3>
+<ul>
+  {% for c in history %}
+    <li>{{ c.date }} — {% if c.done %}Done{% else %}Not done{% endif %}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

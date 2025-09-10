@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Habit Tracker</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    .pill { padding: 0.2rem 0.6rem; border-radius: 999px; background: #eee; }
+    .square { width: 16px; height: 16px; display: inline-block; margin: 2px; border: 1px solid #aaa; }
+    .square.on { background: #4caf50; }
+    .square.off { background: #eee; }
+  </style>
+</head>
+<body>
+  {% if messages %}
+    {% for m in messages %}<p>{{ m }}</p>{% endfor %}
+  {% endif %}
+  {% block content %}{% endblock %}
+</body>
+</html>
