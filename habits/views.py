@@ -1,3 +1,7 @@
+from django.urls import reverse
+from .forms import HabitForm
+
+
 from datetime import date, timedelta
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
@@ -103,3 +107,15 @@ def toggle_completion(request, pk: int):
         messages.success(request, f"Marked {habit.name} as done for {anchor}.")
 
     return redirect("habits:habit_detail", pk=habit.pk)
+
+def create_habit(request):
+    # GET: blank form; POST: validate + save
+    if request.method == "POST":
+        form = HabitForm(request.POST)
+        if form.is_valid():
+            habit = form.save()  # creates Habit row
+            messages.success(request, f"Created habit: {habit.name}.")
+            return redirect(reverse("habits:habit_detail", args=[habit.pk]))
+    else:
+        form = HabitForm()
+    return render(request, "create.html", {"form": form})

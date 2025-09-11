@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Habits</h1>
+
+<p><a href="{% url 'habits:create_habit' %}">Create Habit</a></p>
+
 <ul>
   {% for h in habits %}
     <li>
@@ -9,7 +12,7 @@
       <span class="pill">{{ h.get_strategy_display }}</span>
     </li>
   {% empty %}
-    <li>No habits yet. Add some in the admin panel.</li>
+    <li>No habits yet. <a href="{% url 'habits:create_habit' %}">Create your first one</a>.</li>
   {% endfor %}
 </ul>
 {% endblock %}

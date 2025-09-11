@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Create Habit</h1>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+
+  {{ form.non_field_errors }}
+
+  <p>
+    {{ form.name.label_tag }}<br>
+    {{ form.name }}
+    {% for e in form.name.errors %}<br><small style="color:#b00">{{ e }}</small>{% endfor %}
+  </p>
+
+  <fieldset>
+    <legend>Habit type</legend>
+    {{ form.habit_type }}
+    {% for e in form.habit_type.errors %}<br><small style="color:#b00">{{ e }}</small>{% endfor %}
+  </fieldset>
+
+  <fieldset>
+    <legend>Strategy</legend>
+    {{ form.strategy }}
+    {% for e in form.strategy.errors %}<br><small style="color:#b00">{{ e }}</small>{% endfor %}
+  </fieldset>
+
+  <p>
+    <button type="submit">Create</button>
+    <a href="{% url 'habits:home' %}">Cancel</a>
+  </p>
+</form>
+{% endblock %}
