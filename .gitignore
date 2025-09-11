@@ -1,10 +1,19 @@
-# Python cache
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Database
+# Django
 db.sqlite3
+*.log
+*.pot
+*.py[co]
+*.sqlite3
 
-# Env files
-.env
+# Virtual environment
 venv/
+.env
+
+# OS files
+.DS_Store

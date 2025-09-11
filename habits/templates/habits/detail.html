@@ -16,6 +16,20 @@
 
 <p>Streak: {{ streak }}</p>
 
+<h3>Progress</h3>
+<p>
+  Strategy: <strong>{{ progress.rule_label }}</strong><br>
+  Window: <strong>{{ progress.window_label }}</strong><br>
+  Result: <strong>{{ progress.done_count }}/{{ progress.total }} ({{ progress.percent }}%)</strong><br>
+  On track: <strong>{% if progress.on_track %}Yes{% else %}No{% endif %}</strong>
+</p>
+
+<p>
+  {% for d, is_done in progress.marks %}
+    <span class="square {% if is_done %}on{% else %}off{% endif %}" title="{{ d }} - {% if is_done %}Done{% else %}Not done{% endif %}"></span>
+  {% endfor %}
+</p>
+
 <h3>Mini History</h3>
 <p>
   {% for c in history %}

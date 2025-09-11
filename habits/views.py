@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 
@@ -23,6 +23,48 @@ def _streak(habit: Habit) -> int:
     )
     return consecutive_anchors(done_dates) if done_dates else 0
 
+def _window_anchors(habit: Habit, today: date | None = None) -> list[date]:
+    # build the list of period anchors we grade against
+    today = today or date.today()
+    start = habit.anchor_for(today)  # day or Monday
+    if habit.habit_type == "daily":
+        # last 7 days, newest first
+        return [start - timedelta(days=i) for i in range(7)]
+    else:
+        # last 4 weeks by Monday anchors, newest first
+        return [start - timedelta(days=7*i) for i in range(4)]
+
+def _progress(habit: Habit, today: date | None = None) -> dict:
+    # compute counts + pass/fail for strategy
+    anchors = _window_anchors(habit, today)
+    done_set = set(
+        Completion.objects.filter(habit=habit, date__in=anchors, done=True)
+        .values_list("date", flat=True)
+    )
+    marks = [(a, a in done_set) for a in anchors]  # keep order
+    total = len(anchors)
+    done_count = sum(1 for _, is_done in marks if is_done)
+    pct = done_count / total if total else 0.0
+
+    if habit.strategy == "strict":
+        on_track = (done_count == total)
+        rule_label = "Strict (all required)"
+    else:
+        on_track = (pct >= 0.70)  # 70% passes
+        rule_label = "Flexible (≥70%)"
+
+    window_label = "Last 7 days" if habit.habit_type == "daily" else "Last 4 weeks"
+
+    return {
+        "window_label": window_label,
+        "rule_label": rule_label,
+        "marks": marks,                # list[(date, bool)] newest -> oldest
+        "done_count": done_count,
+        "total": total,
+        "percent": round(pct * 100),   # whole number percent
+        "on_track": on_track,
+    }
+
 def habit_detail(request, pk: int):
     habit = get_object_or_404(Habit, pk=pk)
     today = date.today()
@@ -31,6 +73,8 @@ def habit_detail(request, pk: int):
     completion = Completion.objects.filter(habit=habit, date=anchor).first()
     history = Completion.objects.filter(habit=habit).order_by("-date")[:14]
 
+    progress = _progress(habit, today)
+
     context = {
         "habit": habit,
         "anchor": anchor,
@@ -38,6 +82,8 @@ def habit_detail(request, pk: int):
         "streak": _streak(habit),
         "history": history,
         "today": today,
+        "progress": progress,           
+
     }
     return render(request, "habits/detail.html", context)
 

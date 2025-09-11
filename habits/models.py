@@ -12,7 +12,7 @@ class Habit(models.Model):
     
     def anchor_for(self, d: date) -> date:
         # wrapper so views don’t repeat logic
-        return period_anchor_for(self.habit_type, d
+        return period_anchor_for(self.habit_type, d)
 
 class Completion(models.Model):
     habit = models.ForeignKey(Habit, on_delete=models.CASCADE, related_name="completions")
