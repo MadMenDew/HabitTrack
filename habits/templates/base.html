@@ -1,20 +1,77 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Habit Tracker</title>
+  <meta charset="utf-8">
+  <title>{% block title %}HabitTrack{% endblock %}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    body { font-family: sans-serif; margin: 2rem; }
-    .pill { padding: 0.2rem 0.6rem; border-radius: 999px; background: #eee; }
-    .square { width: 16px; height: 16px; display: inline-block; margin: 2px; border: 1px solid #aaa; }
-    .square.on { background: #4caf50; }
-    .square.off { background: #eee; }
+    :root {
+      --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --ring:#1f2937;
+      --text:#e5e7eb; --ok:#16a34a; --info:#2563eb; --warn:#d97706; --err:#dc2626;
+      --on:#22c55e; --off:#334155;
+    }
+    body { background:var(--bg); color:var(--text); font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:0; }
+    .container { max-width:900px; margin:0 auto; padding:24px; }
+    header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    a { color:#93c5fd; text-decoration:none; }
+    a:hover { text-decoration:underline; }
+
+    /* Messages */
+    .messages { display:grid; gap:10px; margin-bottom:16px; }
+    .msg { padding:12px 14px; border-radius:12px; border:1px solid var(--ring); background:#0b1220; }
+    .msg.info { border-color:rgba(37,99,235,.5); }
+    .msg.success { border-color:rgba(34,197,94,.5); }
+    .msg.warning { border-color:rgba(217,119,6,.5); }
+    .msg.error { border-color:rgba(220,38,38,.5); }
+
+    /* Detail card */
+    .page-title { font-size:1.6rem; margin:8px 0 16px; }
+    .status-card { border:1px solid var(--ring); border-radius:16px; padding:16px; background:var(--panel); }
+    .status-row { display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; }
+    .status-item .label { color:var(--muted); font-size:.8rem; margin-bottom:6px; }
+    .status-item .value { font-weight:600; }
+    .value.done { color:var(--ok); }
+    .value.pending { color:var(--muted); }
+
+    .progress-bar { height:10px; background:#0b1220; border:1px solid var(--ring); border-radius:999px; overflow:hidden; }
+    .progress-fill { height:100%; background:linear-gradient(90deg, var(--on), #34d399); }
+
+    .subtle { margin-top:8px; color:var(--muted); font-size:.85rem; }
+
+    /* History squares */
+    .section-title { margin:20px 0 8px; font-size:1.1rem; }
+    .history { display:grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap:10px; }
+    .history .cell { text-align:center; }
+    .square { width:28px; height:28px; margin:0 auto 6px; border-radius:6px; border:1px solid var(--ring); }
+    .square.on { background:var(--on); }
+    .square.off { background:var(--off); }
+    .cell-label { font-size:.72rem; color:var(--muted); }
+
+    /* Stack to 4 cols for weekly */
+    {% comment %} Weekly view only renders 4 cells; grid still looks fine {% endcomment %}
+
+    @media (max-width:640px){
+      .status-row { grid-template-columns:1fr; }
+      .history { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    }
   </style>
 </head>
 <body>
-  {% if messages %}
-    {% for m in messages %}<p>{{ m }}</p>{% endfor %}
-  {% endif %}
-  {% block content %}{% endblock %}
+  <div class="container">
+    <header>
+      <a href="{% url 'habits:home' %}"><strong>HabitTrack</strong></a>
+      <nav><a href="{% url 'habits:create_habit' %}">+ New habit</a></nav>
+    </header>
+
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="msg {{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
 </body>
 </html>

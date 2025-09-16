@@ -1,48 +1,56 @@
 {% extends "base.html" %}
 {% block content %}
 <a href="{% url 'habits:home' %}">Back</a>
-<h1>{{ habit.name }}</h1>
+<h1 class="page-title">{{ habit.name }}</h1>
 
-<p>
-  Current period: {{ anchor }}
-  {% if completion and completion.done %}
-    <span class="pill">Done</span>
-  {% else %}
-    <span class="pill">Not done</span>
-  {% endif %}
+<!-- Status / Streak / Progress -->
+<div class="status-card">
+  <div class="status-row">
+    <div class="status-item">
+      <div class="label">Status</div>
+      <div class="value {{ status|lower }}">{{ status }}</div>
+    </div>
+    <div class="status-item">
+      <div class="label">Streak</div>
+      <div class="value"> {{ streak }}</div>
+    </div>
+    <div class="status-item">
+      <div class="label">Progress</div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: {{ progress_pct }}%;"></div>
+      </div>
+      <div class="progress-text">{{ progress_pct }}%</div>
+    </div>
+  </div>
+
+  <div class="subtle">
+    {{ window_label }} • {{ rule_label }}
+    • Type: {{ habit.get_habit_type_display }} • Strategy: {{ habit.get_strategy_display }}
+  </div>
+</div>
+
+<!-- Toggle -->
+<p style="margin-top:14px;">
+  <a href="{% url 'habits:toggle_completion' habit.pk %}">Toggle completion</a>
 </p>
 
-<p><a href="{% url 'habits:toggle_completion' habit.pk %}">Toggle completion</a></p>
-
-<p>Streak: {{ streak }}</p>
-
-<h3>Progress</h3>
-<p>
-  Strategy: <strong>{{ progress.rule_label }}</strong><br>
-  Window: <strong>{{ progress.window_label }}</strong><br>
-  Result: <strong>{{ progress.done_count }}/{{ progress.total }} ({{ progress.percent }}%)</strong><br>
-  On track: <strong>{% if progress.on_track %}Yes{% else %}No{% endif %}</strong>
-</p>
-
-<p>
-  {% for d, is_done in progress.marks %}
-    <span class="square {% if is_done %}on{% else %}off{% endif %}" title="{{ d }} - {% if is_done %}Done{% else %}Not done{% endif %}"></span>
+<!-- Mini history  -->
+<h3 class="section-title">{{ is_daily|yesno:"Past 7 Days,Past 4 Weeks" }}</h3>
+<div class="history">
+  {% for cell in cells %}
+    <div class="cell" aria-label="{{ cell.label }} {{ cell.done|yesno:'done,pending' }}" title="{{ cell.label }} — {{ cell.done|yesno:'done,pending' }}">
+      <div class="square {{ cell.done|yesno:'on,off' }}"></div>
+      <div class="cell-label">{{ cell.label }}</div>
+    </div>
   {% endfor %}
-</p>
+</div>
 
-<h3>Mini History</h3>
-<p>
-  {% for c in history %}
-    <span class="square {% if c.done %}on{% else %}off{% endif %}"></span>
-  {% empty %}
-    No history yet.
-  {% endfor %}
-</p>
-
-<h3>Recent entries</h3>
+<h3 style="margin-top:20px;">Recent entries</h3>
 <ul>
   {% for c in history %}
     <li>{{ c.date }} — {% if c.done %}Done{% else %}Not done{% endif %}</li>
+  {% empty %}
+    <li>No history yet.</li>
   {% endfor %}
 </ul>
 {% endblock %}

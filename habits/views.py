@@ -79,6 +79,20 @@ def habit_detail(request, pk: int):
 
     progress = _progress(habit, today)
 
+    status = "Done" if (completion and completion.done) else "Pending"
+    progress_pct = progress["percent"]      # 0..100 (already rounded)
+    on_track = progress["on_track"]         # True/False for strategy pass
+
+    marks_asc = list(reversed(progress["marks"]))  # you stored newest->oldest; flip it
+    cells = []
+    if habit.habit_type == "daily":
+        for d, done in marks_asc:
+            cells.append({"label": d.strftime("%a"), "done": done})
+    else:
+        for d, done in marks_asc:
+            cells.append({"label": f"Wk {d.isocalendar().week}", "done": done})
+
+
     context = {
         "habit": habit,
         "anchor": anchor,
@@ -86,18 +100,25 @@ def habit_detail(request, pk: int):
         "streak": _streak(habit),
         "history": history,
         "today": today,
-        "progress": progress,           
+        "progress": progress,  
+
+        "status": status,
+        "progress_pct": progress_pct,
+        "on_track": on_track,
+        "window_label": progress["window_label"],  # Last 7 days / Last 4 weeks
+        "rule_label": progress["rule_label"],      # Strict (all required)/ Flexible ≥70%
+        "cells": cells,                             # [{label, done}] oldest -> newest
+        "is_daily": habit.habit_type == "daily",
 
     }
     return render(request, "habits/detail.html", context)
 
 def toggle_completion(request, pk: int):
     habit = get_object_or_404(Habit, pk=pk)
-    anchor = _current_anchor(habit)
+    today = date.today()
+    anchor = _current_anchor(habit, today)
+    obj, created = Completion.objects.get_or_create(habit=habit, date=anchor, defaults={"done": True})
 
-    obj, created = Completion.objects.get_or_create(
-        habit=habit, date=anchor, defaults={"done": True}
-    )
     if not created:
         obj.done = not obj.done
         obj.save(update_fields=["done"])
@@ -105,7 +126,7 @@ def toggle_completion(request, pk: int):
         messages.info(request, f"{habit.name} set to {state} for {anchor}.")
     else:
         messages.success(request, f"Marked {habit.name} as done for {anchor}.")
-
+    
     return redirect("habits:habit_detail", pk=habit.pk)
 
 def create_habit(request):
