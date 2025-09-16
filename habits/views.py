@@ -5,9 +5,12 @@ from .forms import HabitForm
 from datetime import date, timedelta
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+from django.conf import settings
 
 from .models import Habit, Completion
 from .utils import consecutive_anchors 
+from .patterns import ToggleCore, build_pipeline 
+
 
 def home(request):
     habits = Habit.objects.all().order_by("name")
@@ -113,20 +116,38 @@ def habit_detail(request, pk: int):
     }
     return render(request, "habits/detail.html", context)
 
-def toggle_completion(request, pk: int):
-    habit = get_object_or_404(Habit, pk=pk)
-    today = date.today()
+def _toggle_core_fn(habit: Habit, today: date) -> bool:
+    """Flip the current period’s completion and return the new done state."""
     anchor = _current_anchor(habit, today)
-    obj, created = Completion.objects.get_or_create(habit=habit, date=anchor, defaults={"done": True})
-
+    obj, created = Completion.objects.get_or_create(
+        habit=habit, date=anchor, defaults={"done": True}
+    )
     if not created:
         obj.done = not obj.done
         obj.save(update_fields=["done"])
-        state = "done" if obj.done else "not done"
-        messages.info(request, f"{habit.name} set to {state} for {anchor}.")
-    else:
-        messages.success(request, f"Marked {habit.name} as done for {anchor}.")
-    
+    return obj.done
+
+def _streak_fn(habit: Habit, today: date) -> int:
+    """Return current streak using your existing helper."""
+    return _streak(habit)
+
+def toggle_completion(request, pk: int):
+    habit = get_object_or_404(Habit, pk=pk)
+    today = date.today()
+
+    core = ToggleCore(toggle_fn=_toggle_core_fn, streak_fn=_streak_fn)
+
+    # feature flags defaults True if missing from settings
+    use_reminder = getattr(settings, "HABIT_BEHAVIORS", {}).get("REMINDER", True)
+    use_reward  = getattr(settings, "HABIT_BEHAVIORS", {}).get("REWARD", True)
+
+    pipeline = build_pipeline(core, use_reminder=use_reminder, use_reward=use_reward)
+    result = pipeline.run(request, habit, today)
+
+    # Fallback message if both decorators are off
+    if not (use_reminder or use_reward):
+        messages.info(request, "Status updated." if result.done else "Marked pending.")
+
     return redirect("habits:habit_detail", pk=habit.pk)
 
 def create_habit(request):
